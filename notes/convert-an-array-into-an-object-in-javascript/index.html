@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="">
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Don&#39;t panic">
+
+<base href="/">
+<title>
+
+
+     convert an array to an object in javascript 
+
+</title>
+<link rel="canonical" href="/notes/convert-an-array-into-an-object-in-javascript/">
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/styles/default.min.css">
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700|Ubuntu+Mono:400,400i,700,700i|Raleway:500">
+
+
+
+    
+    <link rel="stylesheet" href="/css/reset.css?t=1489443391">
+    <link rel="stylesheet" href="/css/pygments.css?t=1489443391">
+    <link rel="stylesheet" href="/css/main.css?t=1489443391">
+    
+        <link rel="stylesheet" href="/css/override.css?t=1489443391">
+    
+
+
+
+
+<link rel="shortcut icon"
+
+    href="/favicon.ico"
+
+>
+
+
+
+
+
+
+</head>
+
+
+<body lang="">
+
+<section class="header">
+    <div class="container">
+        <div class="content">
+            
+              <a href="/"><img class="avatar" src="/img/avatar.jpg" /></a>
+            
+            <a href="/"><div class="name">Hugo Marisco</div></a>
+            
+              <h3 class="self-intro">Don&#39;t panic</h3>
+            
+
+            
+              <nav>
+                  <ul>
+                      
+                        <li class="nav-blog"><a href="/notes/">notes</a></li>
+                      
+                        <li class="nav-blog"><a href="/photos/">photos</a></li>
+                      
+                  </ul>
+              </nav>
+            
+        </div>
+    </div>
+</section>
+
+<section class="icons">
+    <div class="container">
+        <div class="content">
+
+        
+            <a href="//github.com/hugomarisco" target="_blank" rel="noopener"><img class="icon" src="/img/github.svg" alt="github" /></a>
+        
+
+        
+            <a href="//twitter.com/hugomarisco" target="_blank" rel="noopener"><img class="icon" src="/img/twitter.svg" alt="twitter" /></a>
+        
+
+        
+
+        
+
+        
+
+        
+            <a href="mailto:hello@hugomarisco.in"><img class="icon" src="/img/email.svg" alt="email" /></a>
+        
+
+        
+            <a href="/index.xml"><img class="icon" src="/img/rss.svg" alt="rss" /></a>
+        
+        </div>
+    </div>
+</section>
+
+
+<section class="main post non-narrow zero-top-spacing">
+    <div class="container">
+        <div class="content">
+            <div class="front-matter">
+                <div class="title-container">
+                    <div class="page-heading">
+
+    convert an array to an object in javascript
+
+</div>
+
+                    <div class="initials"><a href="/"></a></div>
+                </div>
+                <div class="meta">
+                    
+                    <div class="date" title='Tue Feb 28 2017 22:10:06 UTC'>Feb 28, 2017</div>
+                    
+                    
+                    <div class="reading-time"><div class="middot"></div>2 minutes read</div>
+                    
+                </div>
+            </div>
+            <div class="markdown">
+                <p><a href="https://duckduckgo.com/?q=functional+programming+in+javascript&amp;atb=v38-7br&amp;ia=web">functional programming in javascript</a> is something that a lot of programmers take advantage of nowadays - and for a good reason. it makes your code more predictable, testable and overall easier to read.</p>
+
+<p>today I&rsquo;m sharing a little trick for when, after you transform an array of objects, using <code>map</code>, <code>filter</code>, etc, you want to return an object indexed by one of the array element&rsquo;s key.</p>
+
+<p>take the following array as an example</p>
+
+<pre><code class="language-javascript">const artists = [
+  { id: 1, name: 'James Arthur' },
+  { id: 2, name: 'Kodaline' },
+  { id: 3, name: 'Bastille' }
+]
+</code></pre>
+
+<p>and you want to transform into something like</p>
+
+<pre><code class="language-javascript">{
+  1: { id: 1, name: 'James Arthur' },
+  2: { id: 2, name: 'Kodaline' },
+  3: { id: 3, name: 'Bastille' }
+}
+</code></pre>
+
+<p>instead of creating an empty object and iterate through the array adding each element, ie</p>
+
+<pre><code class="language-javascript">function arrToObj(arr) {
+  const obj = {}
+
+  artists.forEach((artist) =&gt; obj[artist.id] = artist)
+
+  return obj
+}
+</code></pre>
+
+<p>you can instead take advantage of the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce">reduce function</a> to achieve the same thing</p>
+
+<pre><code class="language-javascript">function arrToObj(arr) {
+  return artists.reduce((artists, artist) =&gt; {
+    artists[artist.id] = artist
+
+    return artists
+  }, {})
+}
+</code></pre>
+
+<p>this solution is easily understandable and you can use it in combination with other collection processing functions, something that&rsquo;s not possible with the first approach</p>
+
+                <br>
+                <p><a href="/blog/">Back to posts</a></p>
+            </div>
+            <br>
+            <div class="disqus">
+                
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-63491821-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='//www.google-analytics.com/analytics.js'></script>
+
+
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/highlight.min.js"></script>
+  
+
+  <script type="text/javascript">
+    hljs.initHighlightingOnLoad();
+  </script>
+
+
+
+</body>
+</html>
+

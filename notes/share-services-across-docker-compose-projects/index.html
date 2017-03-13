@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="">
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Don&#39;t panic">
+
+<base href="/">
+<title>
+
+
+     share services across docker-compose projects 
+
+</title>
+<link rel="canonical" href="/notes/share-services-across-docker-compose-projects/">
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/styles/default.min.css">
+
+
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700|Ubuntu+Mono:400,400i,700,700i|Raleway:500">
+
+
+
+    
+    <link rel="stylesheet" href="/css/reset.css?t=1489443391">
+    <link rel="stylesheet" href="/css/pygments.css?t=1489443391">
+    <link rel="stylesheet" href="/css/main.css?t=1489443391">
+    
+        <link rel="stylesheet" href="/css/override.css?t=1489443391">
+    
+
+
+
+
+<link rel="shortcut icon"
+
+    href="/favicon.ico"
+
+>
+
+
+
+
+
+
+</head>
+
+
+<body lang="">
+
+<section class="header">
+    <div class="container">
+        <div class="content">
+            
+              <a href="/"><img class="avatar" src="/img/avatar.jpg" /></a>
+            
+            <a href="/"><div class="name">Hugo Marisco</div></a>
+            
+              <h3 class="self-intro">Don&#39;t panic</h3>
+            
+
+            
+              <nav>
+                  <ul>
+                      
+                        <li class="nav-blog"><a href="/notes/">notes</a></li>
+                      
+                        <li class="nav-blog"><a href="/photos/">photos</a></li>
+                      
+                  </ul>
+              </nav>
+            
+        </div>
+    </div>
+</section>
+
+<section class="icons">
+    <div class="container">
+        <div class="content">
+
+        
+            <a href="//github.com/hugomarisco" target="_blank" rel="noopener"><img class="icon" src="/img/github.svg" alt="github" /></a>
+        
+
+        
+            <a href="//twitter.com/hugomarisco" target="_blank" rel="noopener"><img class="icon" src="/img/twitter.svg" alt="twitter" /></a>
+        
+
+        
+
+        
+
+        
+
+        
+            <a href="mailto:hello@hugomarisco.in"><img class="icon" src="/img/email.svg" alt="email" /></a>
+        
+
+        
+            <a href="/index.xml"><img class="icon" src="/img/rss.svg" alt="rss" /></a>
+        
+        </div>
+    </div>
+</section>
+
+
+<section class="main post non-narrow zero-top-spacing">
+    <div class="container">
+        <div class="content">
+            <div class="front-matter">
+                <div class="title-container">
+                    <div class="page-heading">
+
+    share services across docker-compose projects
+
+</div>
+
+                    <div class="initials"><a href="/"></a></div>
+                </div>
+                <div class="meta">
+                    
+                    <div class="date" title='Wed Mar 8 2017 19:38:44 UTC'>Mar 8, 2017</div>
+                    
+                    
+                    <div class="reading-time"><div class="middot"></div>2 minutes read</div>
+                    
+                </div>
+            </div>
+            <div class="markdown">
+                
+
+<p>if you use docker-compose as part of your development process you probably needed to share some services across (docker-compose) projects.</p>
+
+<p>let&rsquo;s say you have two projects that share a common queue:</p>
+
+<h3 id="sleepy-project-1">sleepy project #1</h3>
+
+<pre><code class="language-yaml"># p1/docker-compose.yaml
+
+version: '3'
+
+services:
+  [...other services...]
+  fake-queue:
+    image: busybox
+    entrypoint: 'sh -c &quot;(ip addr show | grep eth0) &amp;&amp; sleep 1000000&quot;'
+</code></pre>
+
+<h3 id="sleepy-project-2">sleepy project #2</h3>
+
+<pre><code class="language-yaml"># p2/docker-compose.yaml
+
+version: '3'
+
+services:
+  [...other services...]
+  fake-queue:
+    image: busybox
+    entrypoint: 'sh -c &quot;(ip addr show | grep eth0) &amp;&amp; sleep 1000000&quot;'
+</code></pre>
+
+<p>if you spin up these compose projects, each will have it&rsquo;s own network and the same service <code>fake-queue</code> will be created twice (once in each network).</p>
+
+<p>you also won&rsquo;t be able to communicate with the instances outside your project&rsquo;s network.</p>
+
+<pre><code>~/p1/ $ docker-compose up
+
+Creating p1_busybox_1
+Attaching to p1_busybox_1
+busybox_1  | 60: eth0@if61: &lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&gt; mtu 1500 qdisc noqueue
+busybox_1  |     inet 172.20.0.2/16 scope global eth0
+</code></pre>
+
+<pre><code>~/p2/ $ docker-compose up
+
+Creating p2_busybox_1
+Attaching to p2_busybox_1
+busybox_1  | 60: eth0@if61: &lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&gt; mtu 1500 qdisc noqueue
+busybox_1  |     inet 172.20.0.2/16 scope global eth0
+</code></pre>
+
+<p>now imagine that you work on a team and some people are working on <strong>sleepy project #1</strong> while others are working on <strong>#2</strong>.</p>
+
+<p>it would be nice if you could just clone their project, run their <code>docker-compose.yml</code> and your services be able to access the common queue.</p>
+
+<hr />
+
+<p>when docker-compose runs it will namespace your project using <code>COMPOSE_PROJECT_NAME</code> environment variable, `<code>-p/--project-name</code> command-line option or, if both are missing, the project&rsquo;s directory name.</p>
+
+<p>this namespacing is what keeps things like networks separated.</p>
+
+<p>if you want to share a network across your projects use the same project name - making docker-compose re-use the network if it&rsquo;s already created.</p>
+
+<p>also, if a service with the same name is already running it will just attach to the running instance instead of re-creating it.</p>
+
+<pre><code>~/p1/ $ docker-compose up -p my_project
+
+Creating network &quot;testproject_default&quot; with the default driver
+Creating testproject_busybox_1
+Attaching to testproject_busybox_1
+busybox_1  | 63: eth0@if64: &lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&gt; mtu 1500 qdisc noqueue
+busybox_1  |     inet 172.22.0.2/16 scope global eth0
+</code></pre>
+
+<pre><code>~/p2/ $ docker-compose up -p my_project
+
+testproject_busybox_1 is up-to-date
+Attaching to testproject_busybox_1
+busybox_1  | 67: eth0@if68: &lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&gt; mtu 1500 qdisc noqueue
+busybox_1  |     inet 172.22.0.2/16 scope global eth0
+</code></pre>
+
+<p>for more information read docker-compose&rsquo;s network documentation <a href="https://docs.docker.com/compose/networking">here</a>.</p>
+
+                <br>
+                <p><a href="/blog/">Back to posts</a></p>
+            </div>
+            <br>
+            <div class="disqus">
+                
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-63491821-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='//www.google-analytics.com/analytics.js'></script>
+
+
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/highlight.min.js"></script>
+  
+
+  <script type="text/javascript">
+    hljs.initHighlightingOnLoad();
+  </script>
+
+
+
+</body>
+</html>
+

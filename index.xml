@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Hugo Marisco</title>
+    <link>/index.xml</link>
+    <description>Recent content on Hugo Marisco</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Wed, 08 Mar 2017 19:38:44 +0000</lastBuildDate>
+    <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>share services across docker-compose projects</title>
+      <link>/notes/share-services-across-docker-compose-projects/</link>
+      <pubDate>Wed, 08 Mar 2017 19:38:44 +0000</pubDate>
+      
+      <guid>/notes/share-services-across-docker-compose-projects/</guid>
+      <description>
+
+&lt;p&gt;if you use docker-compose as part of your development process you probably needed to share some services across (docker-compose) projects.&lt;/p&gt;
+
+&lt;p&gt;let&amp;rsquo;s say you have two projects that share a common queue:&lt;/p&gt;
+
+&lt;h3 id=&#34;sleepy-project-1&#34;&gt;sleepy project #1&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;# p1/docker-compose.yaml
+
+version: &#39;3&#39;
+
+services:
+  [...other services...]
+  fake-queue:
+    image: busybox
+    entrypoint: &#39;sh -c &amp;quot;(ip addr show | grep eth0) &amp;amp;&amp;amp; sleep 1000000&amp;quot;&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;sleepy-project-2&#34;&gt;sleepy project #2&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;# p2/docker-compose.yaml
+
+version: &#39;3&#39;
+
+services:
+  [...other services...]
+  fake-queue:
+    image: busybox
+    entrypoint: &#39;sh -c &amp;quot;(ip addr show | grep eth0) &amp;amp;&amp;amp; sleep 1000000&amp;quot;&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;if you spin up these compose projects, each will have it&amp;rsquo;s own network and the same service &lt;code&gt;fake-queue&lt;/code&gt; will be created twice (once in each network).&lt;/p&gt;
+
+&lt;p&gt;you also won&amp;rsquo;t be able to communicate with the instances outside your project&amp;rsquo;s network.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/p1/ $ docker-compose up
+
+Creating p1_busybox_1
+Attaching to p1_busybox_1
+busybox_1  | 60: eth0@if61: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&amp;gt; mtu 1500 qdisc noqueue
+busybox_1  |     inet 172.20.0.2/16 scope global eth0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;~/p2/ $ docker-compose up
+
+Creating p2_busybox_1
+Attaching to p2_busybox_1
+busybox_1  | 60: eth0@if61: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&amp;gt; mtu 1500 qdisc noqueue
+busybox_1  |     inet 172.20.0.2/16 scope global eth0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;now imagine that you work on a team and some people are working on &lt;strong&gt;sleepy project #1&lt;/strong&gt; while others are working on &lt;strong&gt;#2&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;it would be nice if you could just clone their project, run their &lt;code&gt;docker-compose.yml&lt;/code&gt; and your services be able to access the common queue.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;when docker-compose runs it will namespace your project using &lt;code&gt;COMPOSE_PROJECT_NAME&lt;/code&gt; environment variable, `&lt;code&gt;-p/--project-name&lt;/code&gt; command-line option or, if both are missing, the project&amp;rsquo;s directory name.&lt;/p&gt;
+
+&lt;p&gt;this namespacing is what keeps things like networks separated.&lt;/p&gt;
+
+&lt;p&gt;if you want to share a network across your projects use the same project name - making docker-compose re-use the network if it&amp;rsquo;s already created.&lt;/p&gt;
+
+&lt;p&gt;also, if a service with the same name is already running it will just attach to the running instance instead of re-creating it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/p1/ $ docker-compose up -p my_project
+
+Creating network &amp;quot;testproject_default&amp;quot; with the default driver
+Creating testproject_busybox_1
+Attaching to testproject_busybox_1
+busybox_1  | 63: eth0@if64: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&amp;gt; mtu 1500 qdisc noqueue
+busybox_1  |     inet 172.22.0.2/16 scope global eth0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;~/p2/ $ docker-compose up -p my_project
+
+testproject_busybox_1 is up-to-date
+Attaching to testproject_busybox_1
+busybox_1  | 67: eth0@if68: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&amp;gt; mtu 1500 qdisc noqueue
+busybox_1  |     inet 172.22.0.2/16 scope global eth0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;for more information read docker-compose&amp;rsquo;s network documentation &lt;a href=&#34;https://docs.docker.com/compose/networking&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>round down a number in javascript</title>
+      <link>/notes/round-down-a-number-in-javascript/</link>
+      <pubDate>Wed, 01 Mar 2017 20:44:21 +0000</pubDate>
+      
+      <guid>/notes/round-down-a-number-in-javascript/</guid>
+      <description>
+
+&lt;p&gt;today I meant to write about the different ways to round numbers in javascript. what initially looked a really straightforward task ended up with me learning about the javascript&amp;rsquo;s limitations regarding this subject&lt;/p&gt;
+
+&lt;p&gt;I will eventually come back to the subject in a future post but today I&amp;rsquo;ll focus on the different alternatives when rounding down a number&lt;/p&gt;
+
+&lt;p&gt;first, we need to actually define what is rounding &lt;strong&gt;down&lt;/strong&gt; a number&lt;/p&gt;
+
+&lt;p&gt;for positive numbers this it&amp;rsquo;s commonly agreed that you want to truncate the decimal part is there&amp;rsquo;s any - i.e. &lt;code&gt;3.1 =&amp;gt; 3&lt;/code&gt;, &lt;code&gt;3.5 =&amp;gt; 3&lt;/code&gt; and &lt;code&gt;3.99999999 =&amp;gt; 3&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;on the other hand, for negative numbers do we want the same behaviour? or do we really want the next most negative integer? - i.e. &lt;code&gt;-3.1 =&amp;gt; (-3 or -4)&lt;/code&gt;, &lt;code&gt;-3.5 =&amp;gt; (-3 or -4)&lt;/code&gt; and &lt;code&gt;-3.99999999 =&amp;gt; (-3 or -4)&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;math-floor-https-developer-mozilla-org-en-us-docs-web-javascript-reference-global-objects-math-floor&#34;&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/floor&#34;&gt;Math.floor()&lt;/a&gt;&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The Math.floor() function returns the largest integer less than or equal to a given number.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;Math.floor(3.1) = 3
+Math.floor(3.5) = 3
+Math.floor(3.99999999) = 3
+
+Math.floor(-3.1) = -4
+Math.floor(-3.5) = -4
+Math.floor(-3.99999999) = -4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;math-trunc-https-developer-mozilla-org-en-us-docs-web-javascript-reference-global-objects-math-trunc&#34;&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc&#34;&gt;Math.trunc()&lt;/a&gt;&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The Math.trunc() function returns the integer part of a number by removing any fractional digits.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;Math.trunc(3.1) = 3
+Math.trunc(3.5) = 3
+Math.trunc(3.99999999) = 3
+
+Math.trunc(-3.1) = -3
+Math.trunc(-3.5) = -3
+Math.trunc(-3.99999999) = -3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;bitwise-operators-https-developer-mozilla-org-en-us-docs-web-javascript-reference-operators-bitwise-operators&#34;&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Bitwise_Operators&#34;&gt;Bitwise operators&lt;/a&gt;&lt;/h3&gt;
+
+&lt;p&gt;They behave exactly like &lt;code&gt;Math.trunc()&lt;/code&gt;&lt;/p&gt;
+
+&lt;h5 id=&#34;double-not&#34;&gt;~~ double NOT&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;~~3.1 === 3
+~~3.5 === 3
+~~3.99999999 === 3
+
+~~(-3.1) === -3
+~~(-3.5) === -3
+~~(-3.99999999) === -3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&#34;or&#34;&gt;| OR&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;3.1 | 0 === 3
+3.5 | 0 === 3
+3.99999999 | 0 === 3
+
+(-3.1) | 0 === -3
+(-3.5) | 0 === -3
+(-3.99999999) | 0 === -3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&#34;left-shift&#34;&gt;&amp;lt;&amp;lt; left shift&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;3.1 &amp;lt;&amp;lt; 0 === 3
+3.5 &amp;lt;&amp;lt; 0 === 3
+3.99999999 &amp;lt;&amp;lt; 0 === 3
+
+(-3.1) &amp;lt;&amp;lt; 0 === -3
+(-3.5) &amp;lt;&amp;lt; 0 === -3
+(-3.99999999) &amp;lt;&amp;lt; 0 === -3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;safe conversions!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>convert an array to an object in javascript</title>
+      <link>/notes/convert-an-array-into-an-object-in-javascript/</link>
+      <pubDate>Tue, 28 Feb 2017 22:10:06 +0000</pubDate>
+      
+      <guid>/notes/convert-an-array-into-an-object-in-javascript/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;https://duckduckgo.com/?q=functional+programming+in+javascript&amp;amp;atb=v38-7br&amp;amp;ia=web&#34;&gt;functional programming in javascript&lt;/a&gt; is something that a lot of programmers take advantage of nowadays - and for a good reason. it makes your code more predictable, testable and overall easier to read.&lt;/p&gt;
+
+&lt;p&gt;today I&amp;rsquo;m sharing a little trick for when, after you transform an array of objects, using &lt;code&gt;map&lt;/code&gt;, &lt;code&gt;filter&lt;/code&gt;, etc, you want to return an object indexed by one of the array element&amp;rsquo;s key.&lt;/p&gt;
+
+&lt;p&gt;take the following array as an example&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const artists = [
+  { id: 1, name: &#39;James Arthur&#39; },
+  { id: 2, name: &#39;Kodaline&#39; },
+  { id: 3, name: &#39;Bastille&#39; }
+]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and you want to transform into something like&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;{
+  1: { id: 1, name: &#39;James Arthur&#39; },
+  2: { id: 2, name: &#39;Kodaline&#39; },
+  3: { id: 3, name: &#39;Bastille&#39; }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;instead of creating an empty object and iterate through the array adding each element, ie&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;function arrToObj(arr) {
+  const obj = {}
+
+  artists.forEach((artist) =&amp;gt; obj[artist.id] = artist)
+
+  return obj
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;you can instead take advantage of the &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce&#34;&gt;reduce function&lt;/a&gt; to achieve the same thing&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;function arrToObj(arr) {
+  return artists.reduce((artists, artist) =&amp;gt; {
+    artists[artist.id] = artist
+
+    return artists
+  }, {})
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;this solution is easily understandable and you can use it in combination with other collection processing functions, something that&amp;rsquo;s not possible with the first approach&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
